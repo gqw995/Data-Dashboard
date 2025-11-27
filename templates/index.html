@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广告数据分析系统 - 文件上传</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 广告数据分析和看板系统</h1>
+            <p class="subtitle">上传数据文件，生成可视化分析报告</p>
+        </header>
+
+        <main>
+            <form id="uploadForm" class="upload-form">
+                <div class="upload-section">
+                    <h2>1. 上传代理商前端数据</h2>
+                    
+                    <div class="file-upload-group">
+                        <label for="kiwi_file" class="file-label">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">奇异果代理商数据</span>
+                            <span class="file-hint">（Excel文件）</span>
+                        </label>
+                        <input type="file" id="kiwi_file" name="kiwi_file" accept=".xlsx,.xls" class="file-input">
+                        <div class="file-name" id="kiwi_file_name">未选择文件</div>
+                    </div>
+
+                    <div class="file-upload-group">
+                        <label for="wabang_file" class="file-label">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">哇棒代理商数据</span>
+                            <span class="file-hint">（Excel文件）</span>
+                        </label>
+                        <input type="file" id="wabang_file" name="wabang_file" accept=".xlsx,.xls" class="file-input">
+                        <div class="file-name" id="wabang_file_name">未选择文件</div>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <h2>2. 上传后端数据</h2>
+                    
+                    <div class="file-upload-group">
+                        <label for="backend_file" class="file-label required">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">华为广告数据</span>
+                            <span class="file-hint">（Excel文件）*必填</span>
+                        </label>
+                        <input type="file" id="backend_file" name="backend_file" accept=".xlsx,.xls" class="file-input" required>
+                        <div class="file-name" id="backend_file_name">未选择文件</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="btn-icon">🚀</span>
+                        <span>上传并处理数据</span>
+                    </button>
+                    <button type="reset" class="btn btn-secondary" id="resetBtn">
+                        <span class="btn-icon">🔄</span>
+                        <span>重置</span>
+                    </button>
+                </div>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>正在处理数据，请稍候...</p>
+            </div>
+
+            <div id="message" class="message hidden"></div>
+        </main>
+
+        <footer>
+            <p>提示：请确保上传的Excel文件格式正确，文件大小不超过50MB</p>
+        </footer>
+    </div>
+
+    <script>
+        // 文件选择显示
+        document.getElementById('kiwi_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('kiwi_file_name').textContent = fileName;
+        });
+
+        document.getElementById('wabang_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('wabang_file_name').textContent = fileName;
+        });
+
+        document.getElementById('backend_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('backend_file_name').textContent = fileName;
+        });
+
+        // 表单提交
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const kiwiFile = document.getElementById('kiwi_file').files[0];
+            const wabangFile = document.getElementById('wabang_file').files[0];
+            const backendFile = document.getElementById('backend_file').files[0];
+            
+            // 检查至少有一个代理商文件
+            if (!kiwiFile && !wabangFile) {
+                showMessage('请至少上传一个代理商数据文件（奇异果或哇棒）', 'error');
+                return;
+            }
+            
+            if (!backendFile) {
+                showMessage('请上传后端数据文件', 'error');
+                return;
+            }
+            
+            if (kiwiFile) formData.append('kiwi_file', kiwiFile);
+            if (wabangFile) formData.append('wabang_file', wabangFile);
+            formData.append('backend_file', backendFile);
+            
+            // 显示加载状态
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('submitBtn').disabled = true;
+            hideMessage();
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    // 延迟跳转，让用户看到成功消息
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    showMessage(result.message || '处理失败，请检查文件格式', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('网络错误，请重试', 'error');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+        
+        // 重置按钮
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('kiwi_file_name').textContent = '未选择文件';
+            document.getElementById('wabang_file_name').textContent = '未选择文件';
+            document.getElementById('backend_file_name').textContent = '未选择文件';
+            hideMessage();
+        });
+        
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.classList.remove('hidden');
+        }
+        
+        function hideMessage() {
+            document.getElementById('message').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
+
+
+

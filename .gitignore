@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Flask
+instance/
+.webassets-cache
+
+# 上传文件和数据缓存
+uploads/
+data_cache/
+*.xlsx
+*.xls
+
+# PyInstaller 打包文件（本地打包生成的文件）
+build/
+dist/
+*.spec.bak
+# 注意：.exe 和 .app 文件在 GitHub Actions 中会生成，但本地不需要提交
+# 如果需要，可以取消下面的注释来忽略这些文件
+# *.exe
+# *.app
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+
+
+

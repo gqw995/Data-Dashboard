@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广告数据分析看板</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>📊 广告数据分析看板</h1>
+            <div class="dashboard-actions">
+                <button class="btn-export" onclick="exportData()">📥 导出数据</button>
+                <button class="btn-export" onclick="window.location.href='/'">🔄 重新上传</button>
+            </div>
+        </div>
+
+        <!-- 筛选器区域 -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>开始日期</label>
+                <input type="date" id="date_from" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <label>结束日期</label>
+                <input type="date" id="date_to" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <label>代理商</label>
+                <select id="agent" onchange="applyFilters()">
+                    <option value="all">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>出价方式</label>
+                <select id="bidding_method" onchange="applyFilters()">
+                    <option value="all">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>资源位</label>
+                <select id="resource" onchange="applyFilters()">
+                    <option value="all">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>素材样式</label>
+                <select id="material" onchange="applyFilters()">
+                    <option value="all">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>利益点</label>
+                <select id="benefit" onchange="applyFilters()">
+                    <option value="all">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>定向（多选）</label>
+                <button type="button" class="btn btn-filter" onclick="openTargetingModal()">选择定向</button>
+                <div class="selected-tags" id="targetingSummary">全部</div>
+            </div>
+        </div>
+
+        <!-- 核心指标卡片 -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">总花费</div>
+                <div class="metric-value" id="total_spend">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">总结算花费</div>
+                <div class="metric-value" id="total_settlement">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">总曝光量</div>
+                <div class="metric-value" id="total_impressions">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">总点击量</div>
+                <div class="metric-value" id="total_clicks">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">总下载量</div>
+                <div class="metric-value" id="total_downloads">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">注册人数</div>
+                <div class="metric-value" id="total_register">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">进件人数</div>
+                <div class="metric-value" id="total_entry">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">授信人数（成功）</div>
+                <div class="metric-value" id="total_credit">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">支用人数（成功）</div>
+                <div class="metric-value" id="total_loan">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">支用笔数</div>
+                <div class="metric-value" id="total_loan_orders">0</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">支用金额</div>
+                <div class="metric-value" id="total_loan_amount">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">授信金额</div>
+                <div class="metric-value" id="total_credit_amount">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">人均授信额度</div>
+                <div class="metric-value" id="avg_credit_amount">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">笔均支用金额</div>
+                <div class="metric-value" id="avg_loan_per_order">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">平均执行利率</div>
+                <div class="metric-value" id="avg_exec_rate">0<span class="metric-unit">%</span></div>
+            </div>
+        </div>
+
+        <!-- 成本指标卡片 -->
+        <div class="metrics-grid">
+            <div class="metric-card" style="border-left-color: #ff7f50;">
+                <div class="metric-label">下载成本</div>
+                <div class="metric-value" id="download_cost">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card" style="border-left-color: #28a745;">
+                <div class="metric-label">注册成本</div>
+                <div class="metric-value" id="register_cost">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card" style="border-left-color: #007bff;">
+                <div class="metric-label">进件成本</div>
+                <div class="metric-value" id="entry_cost">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card" style="border-left-color: #17a2b8;">
+                <div class="metric-label">授信成本</div>
+                <div class="metric-value" id="credit_cost">0<span class="metric-unit">元</span></div>
+            </div>
+            <div class="metric-card" style="border-left-color: #ffc107;">
+                <div class="metric-label">支用成本</div>
+                <div class="metric-value" id="loan_cost">0<span class="metric-unit">元</span></div>
+            </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">每日花费趋势</div>
+                <div class="chart-container">
+                    <canvas id="dailySpendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">每日曝光/点击趋势</div>
+                <div class="chart-container">
+                    <canvas id="dailyTrafficChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">代理商花费对比（含出价方式）</div>
+                <div class="chart-container">
+                    <canvas id="agentSpendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">出价方式花费分布</div>
+                <div class="chart-container">
+                    <canvas id="biddingMethodChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">定向花费分布</div>
+                <div class="chart-container">
+                    <canvas id="targetingSpendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">资源位花费分布</div>
+                <div class="chart-container">
+                    <canvas id="resourceSpendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card chart-card-wide">
+                <div class="chart-title">准入/授信/支用通过率趋势</div>
+                <div class="chart-container">
+                    <canvas id="rateTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 定向筛选弹窗 -->
+        <div id="targetingModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>选择定向</h3>
+                    <button class="close-btn" onclick="closeTargetingModal()">×</button>
+                </div>
+                <div class="modal-body" id="targetingOptions">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" onclick="clearTargetingSelection()">清空</button>
+                    <button class="btn btn-primary" type="button" onclick="applyTargetingSelection()">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载提示 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>正在加载数据...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
+
+
