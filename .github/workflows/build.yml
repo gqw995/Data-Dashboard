@@ -38,7 +38,7 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 广告数据分析系统-Windows
+          name: AdsDataAnalysis-Windows
           path: dist/广告数据分析系统.exe
           retention-days: 30
 
@@ -67,7 +67,7 @@ jobs:
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 广告数据分析系统-Mac
+          name: AdsDataAnalysis-Mac
           path: dist/广告数据分析系统
           retention-days: 30
 
