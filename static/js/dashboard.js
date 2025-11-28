@@ -3,10 +3,32 @@ let charts = {};
 let filterOptions = {};
 let selectedTargetings = [];
 
+// 检查 Chart.js 是否已加载
+function checkChartJS() {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js 未加载，请检查 static/js/chart.umd.min.js 文件是否存在');
+        alert('图表库加载失败，请检查应用文件是否完整。如果问题持续，请联系技术支持。');
+        return false;
+    }
+    return true;
+}
+
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', function() {
-    loadFilterOptions();
-    loadStatistics();
+    // 等待 Chart.js 加载完成
+    if (typeof Chart === 'undefined') {
+        // 如果 Chart.js 未加载，等待一段时间后重试
+        setTimeout(function() {
+            if (!checkChartJS()) {
+                return;
+            }
+            loadFilterOptions();
+            loadStatistics();
+        }, 500);
+    } else {
+        loadFilterOptions();
+        loadStatistics();
+    }
 });
 
 // 加载筛选选项
@@ -214,6 +236,9 @@ function updateMetrics(data) {
 
 // 更新图表
 function updateCharts(data) {
+    if (!checkChartJS()) {
+        return;
+    }
     updateDailySpendChart(data.daily_stats || []);
     updateDailyTrafficChart(data.daily_stats || []);
     updateAgentSpendChart(data.agent_stats || [], data.agent_bidding_mix || []);
