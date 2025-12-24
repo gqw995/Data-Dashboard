@@ -37,11 +37,9 @@ if __name__ == '__main__':
     else:
         # 开发环境
         base_path = os.path.dirname(os.path.abspath(__file__))
-    
-    # 确保必要的目录存在
-    os.makedirs('uploads', exist_ok=True)
-    os.makedirs('data_cache', exist_ok=True)
-    
+
+    # 注意：uploads和cache目录已在app.py中使用tempfile自动创建
+
     # 查找可用端口
     port = find_free_port(5000)
     if port != 5000:

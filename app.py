@@ -5,6 +5,7 @@ Flask主程序
 from flask import Flask, render_template, request, jsonify, send_file, session
 import os
 import json
+import tempfile
 from werkzeug.utils import secure_filename
 from data_processor import process_all_data
 import pandas as pd
@@ -12,12 +13,16 @@ from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'ads_data_analysis_secret_key_2025'  # 用于session管理
-app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# 使用系统临时目录来存储文件，解决PyInstaller打包后的路径问题
+temp_base = tempfile.gettempdir()
+app.config['UPLOAD_FOLDER'] = os.path.join(temp_base, 'huawei_dashboard_uploads')
+app.config['CACHE_FOLDER'] = os.path.join(temp_base, 'huawei_dashboard_cache')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 限制上传文件大小为50MB
 
-# 确保上传目录存在
+# 确保目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs('data_cache', exist_ok=True)  # 数据缓存目录
+os.makedirs(app.config['CACHE_FOLDER'], exist_ok=True)
 
 # 允许的文件扩展名
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
@@ -124,7 +129,7 @@ def upload_files():
             return jsonify({'success': False, 'message': '数据处理失败，请检查文件格式是否正确'}), 500
         
         # 保存处理后的数据到缓存
-        cache_file = os.path.join('data_cache', f"merged_data_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx")
+        cache_file = os.path.join(app.config['CACHE_FOLDER'], f"merged_data_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx")
         merged_df.to_excel(cache_file, index=False)
         
         # 将数据转换为JSON格式（用于前端展示）

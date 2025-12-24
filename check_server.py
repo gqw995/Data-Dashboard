@@ -67,7 +67,7 @@ print()
 
 # 检查目录权限
 print("4. 检查目录权限...")
-directories = ['uploads', 'data_cache', 'templates', 'static']
+directories = ['templates', 'static']
 for directory in directories:
     if os.path.exists(directory):
         if os.access(directory, os.R_OK):
@@ -75,7 +75,15 @@ for directory in directories:
         else:
             print(f"   ❌ {directory}/ 不可读")
     else:
-        print(f"   ⚠️  {directory}/ 不存在（将自动创建）")
+        print(f"   ⚠️  {directory}/ 不存在")
+
+# 检查系统临时目录权限
+import tempfile
+temp_dir = tempfile.gettempdir()
+if os.access(temp_dir, os.W_OK):
+    print(f"   ✅ 系统临时目录可写 ({temp_dir})")
+else:
+    print(f"   ❌ 系统临时目录不可写 ({temp_dir})")
 print()
 
 # 检查端口占用
